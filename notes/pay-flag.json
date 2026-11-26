@@ -1,0 +1,93 @@
+{
+  "saved": true,
+  "rows": [
+    {
+      "hit": "ep20",
+      "obsolete": false,
+      "cells": [
+        "S",
+        "S",
+        "20",
+        "SOPD (Specialist outpatient)",
+        "Require to pay."
+      ]
+    },
+    {
+      "hit": "ep5",
+      "obsolete": false,
+      "cells": [
+        "F",
+        "F",
+        "5",
+        "FMOP (Family medicine)",
+        "Require to pay."
+      ]
+    },
+    {
+      "hit": "ep20",
+      "obsolete": false,
+      "cells": [
+        "O",
+        "S",
+        "20",
+        "SOPD (Specialist outpatient)",
+        "Not required to pay, as a full waiver."
+      ]
+    },
+    {
+      "hit": "ep5",
+      "obsolete": false,
+      "cells": [
+        "P",
+        "F",
+        "5",
+        "FMOP (Family medicine)",
+        "Not required to pay, as a full waiver."
+      ]
+    },
+    {
+      "hit": "ep20",
+      "obsolete": false,
+      "cells": [
+        "Y or blank",
+        "Y",
+        "20",
+        "",
+        "Require to pay."
+      ]
+    },
+    {
+      "hit": "ep20",
+      "obsolete": false,
+      "cells": [
+        "N",
+        "Y",
+        "20",
+        "",
+        "Not require to pay as HA/GS, non charge case, or fully waiver case."
+      ]
+    },
+    {
+      "hit": "zero",
+      "obsolete": true,
+      "cells": [
+        "G or Q",
+        "G",
+        "No G price supplied",
+        "",
+        "GOPC is obsoleted as combined with FMOP."
+      ]
+    },
+    {
+      "hit": "zero",
+      "obsolete": true,
+      "cells": [
+        "X",
+        "not used",
+        "$0, and the screen stops",
+        "",
+        ""
+      ]
+    }
+  ]
+}

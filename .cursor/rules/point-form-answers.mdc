@@ -1,0 +1,13 @@
+---
+description: When the user asks in numbered or bullet points, answer in the same points
+alwaysApply: true
+---
+
+# Point-form answers
+
+When the user asks in numbered points or bullets, answer in the same form. Keep each answer under the same number or bullet so it is clear which question it addresses.
+
+- Use the user's numbering. Do not merge two questions into one paragraph.
+- Put the answer in the first sentence of that point. Add the supporting detail under the same point.
+- A short lead line is fine. The points still carry the answers.
+---

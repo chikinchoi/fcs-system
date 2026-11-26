@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Production vs CR</title>
+  <style>
+    :root {
+      --bg: #181818;
+      --card: #1f1f1f;
+      --fill: rgba(255, 255, 255, 0.04);
+      --fill-strong: rgba(255, 255, 255, 0.07);
+      --stroke: rgba(255, 255, 255, 0.09);
+      --stroke-strong: rgba(255, 255, 255, 0.14);
+      --ink: #e4e4e4;
+      --ink2: rgba(228, 228, 228, 0.72);
+      --ink3: rgba(228, 228, 228, 0.5);
+      --ok: #4fb67a;
+      --bad: #e5675f;
+      --warn: #d9a840;
+      --info: #5aa3e0;
+      --ok-row: rgba(79, 182, 122, 0.08);
+      --bad-row: rgba(229, 103, 95, 0.1);
+      --warn-row: rgba(217, 168, 64, 0.1);
+      --info-row: rgba(90, 163, 224, 0.09);
+      --radius: 8px;
+      --radius-lg: 10px;
+      --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    html.light {
+      --bg: #f8f8f8;
+      --card: #ffffff;
+      --fill: rgba(0, 0, 0, 0.03);
+      --fill-strong: rgba(0, 0, 0, 0.05);
+      --stroke: rgba(0, 0, 0, 0.09);
+      --stroke-strong: rgba(0, 0, 0, 0.15);
+      --ink: #1f1f1f;
+      --ink2: rgba(31, 31, 31, 0.72);
+      --ink3: rgba(31, 31, 31, 0.5);
+      --ok: #1f8a4c;
+      --bad: #c4423a;
+      --warn: #a87412;
+      --info: #2f74b5;
+      --ok-row: rgba(31, 138, 76, 0.07);
+      --bad-row: rgba(196, 66, 58, 0.08);
+      --warn-row: rgba(168, 116, 18, 0.08);
+      --info-row: rgba(47, 116, 181, 0.07);
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--bg); color: var(--ink); scroll-behavior: smooth; scroll-padding-top: 64px; }
+    body {
+      margin: 0 auto;
+      max-width: none;
+      padding: 18px 20px calc(36px + env(safe-area-inset-bottom));
+      font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    }
+    .stack { display: flex; flex-direction: column; }
+    .g6 { gap: 6px; } .g8 { gap: 8px; } .g10 { gap: 10px; } .g12 { gap: 12px; } .g20 { gap: 20px; }
+    h1 { margin: 0; font-size: 24px; line-height: 1.25; font-weight: 600; letter-spacing: -0.01em; }
+    h2 { margin: 0; font-size: 17px; line-height: 1.3; font-weight: 600; }
+    .t2 { color: var(--ink2); }
+    .t3 { color: var(--ink3); }
+    .small { font-size: 12px; }
+    .topbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+    .actions, .jumps { display: flex; gap: 6px; flex-wrap: wrap; }
+    .jumps {
+      position: sticky; top: 0; z-index: 30;
+      margin: 0 -20px; padding: 8px 20px;
+      background: color-mix(in srgb, var(--bg) 92%, transparent);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--stroke);
+    }
+    .arrive { animation: section-arrive 0.9s ease; }
+    @keyframes section-arrive {
+      0% { outline: 2px solid color-mix(in srgb, var(--info) 70%, transparent); outline-offset: 3px; }
+      100% { outline-color: transparent; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .arrive { animation: none; }
+    }
+    .btn {
+      font: inherit; font-size: 12px; color: var(--ink2); background: transparent;
+      border: 1px solid var(--stroke); border-radius: 999px; padding: 4px 12px;
+      text-decoration: none; cursor: pointer; white-space: nowrap;
+    }
+    .btn:hover { background: var(--fill); color: var(--ink); }
+    .callout { padding: 12px 14px; border-radius: var(--radius-lg); border: 1px solid var(--stroke); background: var(--fill); }
+    .callout.warning { background: var(--warn-row); border-color: color-mix(in srgb, var(--warn) 30%, transparent); }
+    .callout.info { background: var(--info-row); border-color: color-mix(in srgb, var(--info) 30%, transparent); }
+    .callout b { display: block; font-weight: 600; margin-bottom: 2px; }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .stat { background: var(--card); border: 1px solid var(--stroke); border-radius: var(--radius-lg); padding: 12px 14px; }
+    .stat b { display: block; font-size: 26px; line-height: 1.15; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    .stat span { display: block; color: var(--ink2); font-size: 12px; margin-top: 2px; }
+    .stat.danger b { color: var(--bad); }
+    .stat.warning b { color: var(--warn); }
+    .stat.success b { color: var(--ok); }
+    .card { background: var(--card); border: 1px solid var(--stroke); border-radius: var(--radius-lg); min-width: 0; }
+    .card-h { padding: 10px 14px; border-bottom: 1px solid var(--stroke); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .card-b { padding: 12px 14px; }
+    .tblwrap { overflow-x: auto; }
+    .tbl { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--stroke); border-radius: var(--radius); overflow: hidden; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+    .tbl th { text-align: left; font-weight: 500; color: var(--ink3); padding: 7px 10px; border-bottom: 1px solid var(--stroke); background: var(--fill); white-space: nowrap; }
+    .tbl td { padding: 7px 10px; border-bottom: 1px solid var(--stroke); vertical-align: top; }
+    .tbl tr:last-child td { border-bottom: 0; }
+    .tbl tr.warning td { background: var(--warn-row); }
+    .tbl tr.danger td { background: var(--bad-row); }
+    .tbl td.nw, .tbl th.nw { white-space: nowrap; }
+    .bar { height: 8px; border-radius: 999px; background: var(--fill-strong); overflow: hidden; min-width: 90px; }
+    .bar i { display: block; height: 8px; background: var(--bad); }
+    .bar.ok i { background: var(--ok); }
+    #files table.tbl { table-layout: fixed; width: 100%; }
+    #files col.dl-name { width: 36%; }
+    #files col.dl-file { width: 52%; }
+    #files col.dl-size { width: 12%; }
+    #files a.dl { color: var(--info); font-weight: 600; text-decoration: none; }
+    #files a.dl:hover { text-decoration: underline; }
+    #files td.fname { color: var(--ink2); font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; white-space: normal; }
+    #files th.fsize, #files td.fsize { white-space: nowrap; text-align: right; }
+    #files td.fsize { color: var(--ink2); }
+    .btn.on { background: var(--info-row); color: var(--ink); border-color: color-mix(in srgb, var(--info) 45%, transparent); }
+    .btn:disabled { opacity: 0.4; cursor: default; }
+    .pairwrap { overflow: hidden; border: 1px solid var(--stroke); border-radius: var(--radius); }
+    table.pair { width: 100%; table-layout: fixed; border: 0; border-radius: 0; font-size: 12px; }
+    table.pair th, table.pair td { padding: 4px 6px; overflow: hidden; }
+    table.pair th { background: var(--card); vertical-align: top; }
+    table.pair td { white-space: nowrap; text-overflow: ellipsis; }
+    .allcols { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+    .hlabel { display: flex; align-items: center; gap: 4px; min-width: 0; font-weight: 600; }
+    .hlabel span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hfilter { width: 100%; margin-top: 4px; font: inherit; font-size: 11px; font-weight: 400; color: var(--ink); background: var(--fill); border: 1px solid var(--stroke); border-radius: 4px; padding: 3px 6px; }
+    .hsides, .sides { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px; }
+    .hsides { margin-top: 3px; color: var(--ink3); font-size: 10px; font-weight: 500; }
+    .sides { min-width: 0; }
+    .sides span { display: block; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sides span + span { box-shadow: inset 1px 0 var(--stroke); padding-left: 4px; }
+    .sides span.diff { background: var(--bad-row); color: var(--bad); font-weight: 600; border-radius: 3px; }
+    .sides span.blank { color: var(--ink3); font-weight: 400; background: transparent; }
+    .pager { display: flex; gap: 6px; align-items: center; }
+    .ex { color: var(--ink3); font-family: var(--mono); font-size: 11px; }
+    details.fold { margin-top: 8px; }
+    details.fold summary { cursor: pointer; color: var(--ink2); }
+    @media (max-width: 900px) {
+      .stats { grid-template-columns: minmax(0, 1fr); }
+      body { padding: 16px 12px calc(32px + env(safe-area-inset-bottom)); }
+      h1 { font-size: 21px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stack g20" id="app">
+    <div class="topbar">
+      <div class="stack g6" style="min-width:0;flex:1 1 320px">
+        <h1>Production vs CR</h1>
+        <div class="t2" id="status">Loading the comparison.</div>
+        <div class="t3 small" id="source"></div>
+      </div>
+      <div class="actions">
+        <a class="btn" href="/">FCS dashboard</a>
+        <button type="button" class="btn" id="theme">Light mode</button>
+      </div>
+    </div>
+    <div class="jumps" id="jumps"></div>
+    <div id="callout"></div>
+    <div class="stats" id="stats"></div>
+    <section class="card" id="compare">
+      <div class="card-h">
+        <h2>Compare side by side</h2>
+        <span class="t3 small" id="pair-count">Loading pairs.</span>
+      </div>
+      <div class="card-b stack g12">
+        <div class="t2 small">Header, detail and drug charging are paired on hospital and MOE. Case services are paired on hospital and case. In each column, CR is on the left and production is on the right. Different values are highlighted. Each value stays on one line, and the columns share the width of the screen. Hover a shortened value to read all of it. Uncheck a heading to hide its values. The box under a heading keeps rows whose value contains that text. Production is the 2 Nov extract. CR is the current export.</div>
+        <div class="actions" id="pair-tabs"></div>
+        <label class="allcols"><input type="checkbox" id="pair-all"> All columns</label>
+        <div id="pair-table"></div>
+        <div class="pager" id="pair-pager"></div>
+      </div>
+    </section>
+    <div id="daily"></div>
+    <div id="tables"></div>
+    <div id="before"></div>
+    <div id="gap"></div>
+    <div id="hospitals"></div>
+    <div id="files"></div>
+  </div>
+  <script>
+    const themeBtn = document.getElementById("theme");
+    function applyTheme(mode) {
+      document.documentElement.classList.toggle("light", mode === "light");
+      themeBtn.textContent = mode === "light" ? "Dark mode" : "Light mode";
+    }
+    themeBtn.addEventListener("click", () => {
+      const next = document.documentElement.classList.contains("light") ? "dark" : "light";
+      localStorage.setItem("fcs-theme", next);
+      localStorage.setItem("fcs-system:theme", next);
+      applyTheme(next);
+    });
+    applyTheme((localStorage.getItem("fcs-theme") || localStorage.getItem("fcs-system:theme")) === "light" ? "light" : "dark");
+
+    const SECTIONS = [
+      ["callout", "Overview"],
+      ["compare", "Side by side"],
+      ["daily", "By day"],
+      ["tables", "Tables"],
+      ["before", "Missing before 26 Oct"],
+      ["gap", "Drug gap"],
+      ["hospitals", "By hospital"],
+      ["files", "Downloads"]
+    ];
+    function renderJumps(active) {
+      document.getElementById("jumps").innerHTML = SECTIONS.map(item =>
+        '<a class="btn' + (item[0] === active ? " on" : "") + '" href="#' + item[0] + '">' + item[1] + "</a>"
+      ).join("");
+    }
+    function markJump(id) {
+      document.querySelectorAll("#jumps a").forEach(link => {
+        link.classList.toggle("on", link.getAttribute("href") === "#" + id);
+      });
+    }
+    renderJumps("callout");
+    document.getElementById("jumps").addEventListener("click", event => {
+      const link = event.target.closest("a[href^='#']");
+      if (!link) return;
+      const target = document.getElementById(link.getAttribute("href").slice(1));
+      if (!target) return;
+      event.preventDefault();
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      target.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+      if (!reduce) {
+        const card = target.classList.contains("card") ? target : (target.querySelector(":scope > .card, :scope > .callout") || target);
+        card.classList.remove("arrive");
+        void card.offsetWidth;
+        card.classList.add("arrive");
+      }
+      markJump(target.id);
+    });
+    const jumpSpy = new IntersectionObserver(entries => {
+      const hit = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (hit) markJump(hit.target.id);
+    }, { rootMargin: "-12% 0px -70% 0px", threshold: [0.15, 0.4] });
+    SECTIONS.forEach(item => {
+      const node = document.getElementById(item[0]);
+      if (node) jumpSpy.observe(node);
+    });
+
+    function esc(value) {
+      return String(value == null ? "" : value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+    function n(value) { return String(value == null ? 0 : value); }
+    function size(bytes) {
+      const value = Number(bytes || 0);
+      if (value >= 1e6) return (value / 1e6).toFixed(1) + " MB";
+      if (value >= 1e3) return (value / 1e3).toFixed(1) + " KB";
+      return value + " B";
+    }
+    function stat(label, value, tone) {
+      return '<div class="stat ' + (tone || "") + '"><b>' + esc(n(value)) + '</b><span>' + esc(label) + "</span></div>";
+    }
+    function card(title, sub, body) {
+      return '<section class="card"><div class="card-h"><h2>' + esc(title) + '</h2><span class="t3 small">' + esc(sub || "") + '</span></div><div class="card-b">' + body + "</div></section>";
+    }
+    function table(headers, rows) {
+      return '<div class="tblwrap"><table class="tbl"><thead><tr>' + headers.map(h => "<th>" + esc(h) + "</th>").join("") + "</tr></thead><tbody>" +
+        rows.join("") + "</tbody></table></div>";
+    }
+    function cells(values, cls) {
+      return "<tr" + (cls ? ' class="' + cls + '"' : "") + ">" + values.map(v => "<td>" + v + "</td>").join("") + "</tr>";
+    }
+    function bar(part, whole, tone) {
+      const pct = whole ? Math.max(0, Math.min(100, 100 * part / whole)) : 0;
+      return '<div class="bar' + (tone ? " " + tone : "") + '" title="' + esc(n(part)) + '"><i style="width:' + pct.toFixed(1) + '%"></i></div>';
+    }
+    function clip(text) {
+      const value = String(text == null ? "" : text);
+      return value.length > 80 ? value.slice(0, 77) + "..." : value;
+    }
+    function fileNote(item) {
+      if (item.note) return item.note;
+      const name = item.name.split("/").pop();
+      if (name.indexOf("_differences") >= 0) return "Paired rows where a business column differs";
+      if (name.indexOf("_prod_only") >= 0) return "Production rows with no CR match, for MOEs that are on CR";
+      if (name.indexOf("_cr_only") >= 0) return "CR rows with no production match";
+      return "";
+    }
+    function fileTitle(item) {
+      const named = {
+        "prod_export.zip": "Production extract",
+        "cr_export.zip": "CR extract, 2 Nov",
+        "cr_new.zip": "CR rows added since 2 Nov",
+        "cr_all.zip": "Current CR extract",
+        "all_exports.zip": "All export files",
+        "prod_cr_differences.zip": "All differences",
+        "fcs_cr_export_scripts.zip": "Python scripts"
+      };
+      const file = item.name.split("/").pop();
+      return named[file] || fileNote(item) || file;
+    }
+    function fileLink(item) {
+      const href = "/prod-cr-file?name=" + encodeURIComponent(item.name);
+      const file = item.name.split("/").pop();
+      const title = fileTitle(item);
+      return "<tr><td><a class=\"dl\" href=\"" + href + "\">" + esc(title) + "</a></td><td class=\"fname\">" + esc(file) + "</td><td class=\"fsize\">" + esc(size(item.bytes)) + "</td></tr>";
+    }
+
+    let pageNow = null;
+    let pageCompare = false;
+    function render(data) {
+      if (!data || !data.totals) {
+        document.getElementById("status").textContent = "The comparison is not ready yet.";
+        return;
+      }
+      const t = data.totals;
+      const cutoff = data.cutoff || {};
+      const now = data.followUp || null;
+      document.getElementById("status").textContent =
+        "Header tlog from " + data.window.from + " to " + data.window.to + " HKT. " + n(t.moes) + " MOEs across " + n(t.hospitals) + " hospitals.";
+      document.getElementById("source").textContent = now
+        ? "2 Nov comparison, plus a CR export on " + now.checked + " HKT. CR header log through " + now.crMaxTlog + " HKT."
+        : "Compared offline from the export. Page built " + data.generated + " HKT.";
+
+      document.getElementById("callout").innerHTML = now
+        ? '<div class="callout info"><b>The MOE headers missing on 2 Nov are on CR now.</b>' +
+          '<div class="t2">Checked on ' + esc(now.checked) + " HKT. All " + n(now.headersBack) + " headers are back, including the " +
+          n(t.missingBeforeCutoff) + " created before 26 Oct. The latest CR header log time is " + esc(now.crMaxTlog) +
+          " HKT. Drug rows are still missing for " + n(now.stillNoDrug) + " MOEs. " + n(now.stillNoDrugNew) +
+          " of those arrived with the new headers and already had a production drug row. " + n(now.stillNoDrugGap) +
+          " already had a CR header on 2 Nov and still have no drug row. The new CR files are in Downloads. The side by side grid uses the current CR export against the 2 Nov production extract. On FC_DRUG_CHARGING, CC means the line is cancelled and IS means it is still issued. A later production update (FC_SYS FCS, FC_USER SYSFCS) is often missing on CR, which still has the earlier MOE row (FC_SYS MOE, FC_USER SYSMOE).</div></div>"
+        : !t.missing
+        ? '<div class="callout info"><b>Every production header in this extract is on CR.</b><div class="t2">Drug rows can still differ. On FC_DRUG_CHARGING, CC means the line is cancelled and IS means it is still issued. A later production update (FC_SYS FCS, FC_USER SYSFCS) is often missing on CR, which still has the earlier MOE row (FC_SYS MOE, FC_USER SYSMOE). ' + n(t.drugGap) + " MOEs have a production drug row and no CR drug row.</div></div>"
+        : '<div class="callout warning"><b>CR stops at the end of 25 Oct 2026. Missing data from 26 Oct is part of this gap.</b>' +
+          '<div class="t2">The newest MOE found on CR was created at ' + esc(cutoff.lastCrCreate) + " HKT. CR has no header created or updated after that. " +
+          n(t.missingAfterCutoff) + " of the " + n(t.missing) + " MOEs missing on CR were created from " + esc(cutoff.missingFrom) +
+          " onward, so they were never in this copy. " + n(t.missingBeforeCutoff) + " older MOEs are missing as well, and " +
+          n(t.staleOnCr) + " MOEs are on CR but were changed on production after the cutoff.</div></div>";
+
+      document.getElementById("stats").innerHTML = (data.compareCr ? [
+        stat("Production MOEs, 2 Nov", t.moes),
+        stat("On CR now", t.onCr, "success"),
+        stat("Still no CR drug row", t.drugGap, t.drugGap ? "warning" : "success"),
+        stat("Hospitals", t.hospitals),
+        stat("CR header log through", String((now && now.crMaxTlog) || "").slice(0, 16))
+      ] : now ? [
+        stat("Production MOEs, 2 Nov", t.moes),
+        stat("Headers back since 2 Nov", now.headersBack, "success"),
+        stat("Still no CR drug row", now.stillNoDrug, "warning"),
+        stat("New headers, drug still absent", now.stillNoDrugNew, "warning"),
+        stat("Old drug gap, still absent", now.stillNoDrugGap, "warning"),
+        stat("CR drug rows in the new file", now.drugMoes, "success"),
+        stat("Hospitals", t.hospitals),
+        stat("CR header log through", String(now.crMaxTlog || "").slice(0, 16))
+      ] : [
+        stat("MOEs on production", t.moes),
+        stat("MOEs also on CR", t.onCr, "success"),
+        stat("Missing from 26 Oct", t.missingAfterCutoff, "danger"),
+        stat("Missing before 26 Oct", t.missingBeforeCutoff, "warning"),
+        stat("On CR, changed after 25 Oct", t.staleOnCr, "warning"),
+        stat("On CR header, no CR drug row", t.drugGap, "warning"),
+        stat("Hospitals", t.hospitals),
+        stat("CR cutoff", "25 Oct", "danger")
+      ]).join("");
+
+      const beforeLabel = SECTIONS.filter(item => item[0] === "before")[0];
+      if (beforeLabel) beforeLabel[1] = now ? "Older MOEs" : "Missing before 26 Oct";
+      renderJumps("callout");
+
+      document.getElementById("daily").innerHTML = card(
+        "MOEs by production create date",
+        now ? "Every header is on CR as of 4 Nov." : "Rows from 26 Oct are the missing data",
+        table(
+          data.compareCr
+            ? ["Create date", "Production", "On CR now", "Share on CR", "Missing now"]
+            : now
+            ? ["Create date", "Production", "On CR now", "Share on CR", "Missing on 2 Nov"]
+            : ["Create date", "Production", "On CR", "Missing on CR", "Share missing"],
+          data.daily.map(d => {
+            const after = d.day >= "2026-10-26";
+            const label = esc(d.day === "earlier" ? "Before 15 Oct" : d.day);
+            if (data.compareCr) {
+              return cells([
+                label, esc(n(d.prod)), esc(n(d.cr)), bar(d.cr, d.prod || 1, "ok"), esc(n(d.missing))
+              ]);
+            }
+            if (!now) {
+              return cells([
+                label, esc(n(d.prod)), esc(n(d.cr)), esc(n(d.missing)), bar(d.missing, d.prod || 1)
+              ], after && d.missing ? "warning" : "");
+            }
+            return cells([
+              label, esc(n(d.prod)), esc(n(d.prod)), bar(d.prod, d.prod || 1, "ok"), esc(n(d.missing))
+            ]);
+          })
+        )
+      );
+
+      pageNow = now;
+      pageCompare = !!data.compareCr;
+      document.getElementById("tables").innerHTML = '<div class="stack g12">' +
+        (now ? '<div class="callout info"><b>Paired differences use the current CR files.</b><div class="t2">Production is the 2 Nov extract. CR is the export from 4 Nov.</div></div>' : "") +
+        data.tables.map(renderTable).join("") + "</div>";
+      document.getElementById("before").innerHTML = renderBefore(data);
+      document.getElementById("gap").innerHTML = renderGap(data);
+      document.getElementById("hospitals").innerHTML = renderHospitals(data);
+      document.getElementById("files").innerHTML = renderFiles(data);
+    }
+
+    function renderTable(item) {
+      const s = item.stats || {};
+      const business = (item.columns || []).filter(c => c.kind === "business");
+      const technical = (item.columns || []).filter(c => c.kind === "technical" && c.differ);
+      const changed = business.filter(c => c.differ).slice().sort((a, b) => b.differ - a.differ);
+      const same = business.filter(c => !c.differ);
+      const rows = changed.map(c => {
+        const sample = (c.examples || [])[0];
+        const example = sample ? '<div class="ex">' + esc(sample.key) + " CR " + esc(clip(sample.cr)) + " / prod " + esc(clip(sample.prod)) + "</div>" : "";
+        return cells([
+          "<b>" + esc(c.column) + "</b>" + example,
+          esc(n(c.differ)),
+          esc(c.pct.toFixed(2) + "%"),
+          esc(n(c.differAfterCutoff))
+        ]);
+      });
+      const body = [
+        '<div class="t2 small" style="margin-bottom:10px">Paired on ' + esc((item.pairKey || []).join(", ")) +
+        ". Compared " + n(business.length) + " business columns. ID, timestamps, and PI_KEY are left out of the difference files.</div>",
+        table(
+          ["", "Count"],
+          [
+            ["Production rows", s.prod_rows],
+            [pageNow && !pageCompare ? "CR rows on 2 Nov" : "CR rows", s.cr_rows],
+            ["CR rows added on 4 Nov", pageNow && !pageCompare ? ({
+              MED_PROFILE_CHARGE_HDR: pageNow.headerRows,
+              MED_PROFILE_CHARGE_DETAIL: pageNow.detailRows,
+              FC_DRUG_CHARGING: pageNow.drugRows,
+              FC_CASE_SERVICES: pageNow.caseRows
+            })[item.table] : null],
+            ["CR rows now", pageNow && !pageCompare ? (s.cr_rows || 0) + (({
+              MED_PROFILE_CHARGE_HDR: pageNow.headerRows,
+              MED_PROFILE_CHARGE_DETAIL: pageNow.detailRows,
+              FC_DRUG_CHARGING: pageNow.drugRows,
+              FC_CASE_SERVICES: pageNow.caseRows
+            })[item.table] || 0) : null],
+            ["Paired", s.paired],
+            ["Paired, business column differs", s.paired_business_diff],
+            ["Of those, production changed from 26 Oct", s.paired_business_diff_after],
+            ["Production only, MOE is on CR", s.prod_only],
+            ["Production rows for MOEs created from 26 Oct", s.prod_rows_moe_after_cutoff],
+            ["CR only", s.cr_only],
+            ["Production case rows with no CR drug pair", s.prod_unpaired]
+          ].filter(pair => pair[1] != null).map(pair => cells([esc(pair[0]), esc(n(pair[1] || 0))]))
+        ),
+        changed.length ? '<div style="height:10px"></div>' + table(["Business column", "Rows that differ", "Share of paired rows", "Changed from 26 Oct"], rows) : "",
+        same.length ? '<div class="t3 small" style="margin-top:8px">Same on every paired row: ' + esc(same.map(c => c.column).join(", ")) + ".</div>" : "",
+        technical.length ? '<details class="fold"><summary class="small">Timestamp and ID columns that differ</summary><div style="height:8px"></div>' +
+          table(["Column", "Rows that differ"], technical.map(c => cells([esc(c.column), esc(n(c.differ))]))) + "</details>" : ""
+      ].join("");
+      return card(item.table, n(s.paired_business_diff || 0) + " paired rows differ", body);
+    }
+
+    function renderBefore(data) {
+      const rows = data.missingBeforeCutoff || [];
+      const now = data.followUp;
+      const intro = now
+        ? "These " + n(rows.length) + " MOEs had no CR header on 2 Nov. They are on CR as of " + esc(now.checked) + " HKT."
+        : "These MOEs were created before the cutoff and still have no header on CR. The full list is in the downloads.";
+      const body = rows.length
+        ? '<div class="t2 small" style="margin-bottom:10px">' + intro + "</div>" +
+          table(["Hospital", "MOE", "Case", "Created", "Updated"], rows.map(r => cells([
+            esc(r.hospital), esc(r.moe), esc(r.caseNo), '<span class="nw">' + esc(r.created) + "</span>", '<span class="nw">' + esc(r.updated) + "</span>"
+          ], now ? "" : "danger")))
+        : '<div class="t2">Every MOE created before 26 Oct is on CR.</div>';
+      return card(now ? "Older MOEs, now on CR" : "Missing before 26 Oct", n(rows.length) + " MOEs", body);
+    }
+
+    function renderGap(data) {
+      const now = data.followUp;
+      const current = !!data.compareCr;
+      const rows = current ? (data.drugGapDaily || []) : ((now && now.drugByDay) || data.drugGapDaily || []);
+      const byProd = {};
+      (data.daily || []).forEach(d => { byProd[d.day] = d.prod; });
+      const intro = current
+        ? "These MOEs have a production drug row and no drug row in the current CR export."
+        : now
+        ? "These MOEs have a production drug row and still have no CR drug row. " + n(now.stillNoDrugNew) + " came back with a header on 4 Nov and " + n(now.stillNoDrugGap) + " already had a CR header on 2 Nov. The list is in Downloads."
+        : "These MOEs have a header on CR and drug rows on production, but no drug row on CR. They were all created in the 9 days before the cutoff. Case services on CR are loaded from the CR drug rows, so these MOEs have no CR case row from this export either.";
+      const body = '<div class="t2 small" style="margin-bottom:10px">' + intro + "</div>" +
+        table(
+          (current || now) ? ["Production create date", "MOEs still without a CR drug row", "Share of that day's MOEs"] : ["Production create date", "MOEs"],
+          rows.map(r => {
+            const day = r.day;
+            const label = day === "earlier" ? "Before 15 Oct" : day;
+            if (!(current || now)) return cells([esc(label), esc(n(r.moes))], "warning");
+            return cells([
+              esc(label), esc(n(r.moes)), bar(r.moes, byProd[day] || r.moes || 1)
+            ], r.moes ? "warning" : "");
+          })
+        );
+      const total = current ? data.totals.drugGap : (now ? now.stillNoDrug : data.totals.drugGap);
+      return card(current || now ? "Drug rows still absent" : "Drug charging gap on CR", n(total) + " MOEs", body);
+    }
+
+    function renderHospitals(data) {
+      const now = data.followUp;
+      const current = !!data.compareCr;
+      const drug = (now && now.drugByHospital) || {};
+      const rows = (data.hospitals || []).map(h => current ? cells([
+        esc(h.hospital), esc(n(h.prod)), esc(n(h.cr)), esc(n(h.drugGap))
+      ]) : now ? cells([
+        esc(h.hospital), esc(n(h.prod)), esc(n(h.prod)), esc(n((h.missingAfter || 0) + (h.missingBefore || 0))), esc(n(drug[h.hospital] || 0))
+      ]) : cells([
+        esc(h.hospital), esc(n(h.prod)), esc(n(h.cr)), esc(n(h.missingAfter)), esc(n(h.missingBefore)), esc(n(h.stale)), esc(n(h.drugGap))
+      ], h.missingBefore ? "danger" : ""));
+      return card("By hospital", (current ? "Current CR export. " : now ? "Headers are on CR as of 4 Nov. " : "") + n((data.hospitals || []).length) + " hospitals", table(
+        current
+          ? ["Hospital", "Production MOEs", "On CR now", "Drug rows still absent"]
+          : now
+          ? ["Hospital", "Production MOEs", "On CR now", "Missing on 2 Nov", "Drug rows still absent"]
+          : ["Hospital", "Production MOEs", "On CR", "Missing from 26 Oct", "Missing before", "Changed after cutoff", "Drug gap"],
+        rows
+      ));
+    }
+
+    function renderFiles(data) {
+      const items = (data.downloads || []).filter(item => {
+        const bytes = Number(item.bytes || 0);
+        const file = String(item.name || "").split("/").pop();
+        return bytes >= 1000 || file === "summary.txt";
+      });
+      const rows = items.map(item => fileLink(item)).join("");
+      return '<section class="card"><div class="card-h"><h2>Downloads</h2><span class="t3 small">Served from this machine</span></div><div class="card-b stack g12">' +
+        '<div class="callout info"><b>These files hold case numbers and MOE order numbers.</b><div class="t2">Send the address of this page instead of attaching the files. The zip files are the production extract, the 2 Nov CR extract, the current CR extract, the CR rows added since 2 Nov, and the difference files.</div></div>' +
+        '<div class="t3 small">A new difference file is picked up only after this server process restarts. That restart clears the Oracle login on the main dashboard.</div>' +
+        '<div class="tblwrap"><table class="tbl"><colgroup><col class="dl-name"><col class="dl-file"><col class="dl-size"></colgroup><thead><tr><th>Download</th><th>File</th><th class="fsize">Size</th></tr></thead><tbody>' +
+        rows + "</tbody></table></div></div></section>";
+    }
+
+    const PAIR_TABLES = [
+      ["hdr", "Header"],
+      ["detail", "Detail"],
+      ["drug", "Drug charging"],
+      ["case", "Case services"]
+    ];
+    const pairState = { table: "hdr", page: 1, columns: null, filters: {} };
+    let pairHeadKey = "";
+    let pairKnown = [];
+    let pairTimer = 0;
+    function pairStore() {
+      try { return JSON.parse(sessionStorage.getItem("prod-cr-pairs") || "{}"); }
+      catch (err) { return {}; }
+    }
+    function pairSave() {
+      const saved = pairStore();
+      saved[pairState.table] = { columns: pairState.columns, filters: pairState.filters };
+      sessionStorage.setItem("prod-cr-pairs", JSON.stringify(saved));
+    }
+    function pairWidths(data) {
+      const units = data.labels.map(label => Math.max(8, Math.min(label.length + 2, 14))).concat(data.columns.map(col => {
+        const shown = data.visible.indexOf(col) >= 0;
+        return shown ? Math.max(12, Math.min(col.length + 2, 20)) : Math.max(6, Math.min(col.length + 3, 14));
+      }));
+      const total = units.reduce((sum, unit) => sum + unit, 0);
+      return units.map(unit => (100 * unit / total).toFixed(4) + "%");
+    }
+    function sideSpan(value, diff) {
+      const blank = value === "";
+      const text = blank ? "(blank)" : value;
+      return '<span class="' + (diff ? "diff " : "") + (blank ? "blank" : "") + '" title="' + esc(text) + '">' + esc(text) + "</span>";
+    }
+    function filterValue(name) {
+      return pairState.filters[name] || "";
+    }
+    function renderPairHead(data) {
+      const widths = pairWidths(data);
+      const cols = widths.map(width => '<col style="width:' + width + '">').join("");
+      const keys = data.keys.map((name, index) =>
+        '<th><div class="hlabel"><span>' + esc(data.labels[index]) + '</span></div><input class="hfilter" data-filter="' + esc(name) + '" value="' + esc(filterValue(name)) + '" placeholder="Filter" autocomplete="off"></th>'
+      ).join("");
+      const fields = data.columns.map(col => {
+        const on = data.visible.indexOf(col) >= 0;
+        if (!on) {
+          return '<th class="collapsed"><label class="hlabel" title="' + esc(col) + '"><input type="checkbox" data-col="' + esc(col) + '"><span>' + esc(col) + "</span></label></th>";
+        }
+        return '<th><label class="hlabel" title="' + esc(col) + '"><input type="checkbox" data-col="' + esc(col) + '" checked><span>' + esc(col) + "</span></label>" +
+          '<input class="hfilter" data-filter="' + esc(col) + '" value="' + esc(filterValue(col)) + '" placeholder="Filter" autocomplete="off">' +
+          '<div class="hsides"><span>CR</span><span>Prod</span></div></th>';
+      }).join("");
+      document.getElementById("pair-table").innerHTML =
+        '<div class="pairwrap"><table class="tbl pair"><colgroup>' + cols + "</colgroup><thead><tr>" + keys + fields +
+        '</tr></thead><tbody id="pair-body"></tbody></table></div>';
+    }
+    function renderPairBody(data) {
+      const body = document.getElementById("pair-body");
+      if (!body) return;
+      const span = data.keys.length + data.columns.length;
+      if (!data.visible.length || !data.rows.length) {
+        body.innerHTML = '<tr><td colspan="' + span + '">No diff is found.</td></tr>';
+        return;
+      }
+      body.innerHTML = data.rows.map(row => {
+        const found = {};
+        row.cells.forEach(cell => { found[cell.column] = cell; });
+        const keys = row.key.map((value, index) => '<td title="' + esc(value) + '">' + esc(value) + (row.after && index === 0 ? ' <span class="t3" title="Production changed from 26 Oct">*</span>' : "") + "</td>").join("");
+        const cellsHtml = data.columns.map(col => {
+          if (data.visible.indexOf(col) < 0) return '<td class="collapsed"></td>';
+          const cell = found[col] || { cr: "", prod: "", diff: false };
+          return '<td><div class="sides">' + sideSpan(cell.cr, cell.diff) + sideSpan(cell.prod, cell.diff) + "</div></td>";
+        }).join("");
+        return "<tr>" + keys + cellsHtml + "</tr>";
+      }).join("");
+    }
+    function renderPairs(data) {
+      document.getElementById("pair-tabs").innerHTML = PAIR_TABLES.map(item =>
+        '<button type="button" class="btn' + (item[0] === data.table ? " on" : "") + '" data-table="' + item[0] + '">' + item[1] + "</button>"
+      ).join("");
+      const shown = data.total ? ((data.page - 1) * data.pageSize + 1) + "-" + Math.min(data.page * data.pageSize, data.total) : "0";
+      document.getElementById("pair-count").textContent = data.title + ", " + n(data.total) + " pairs, showing " + shown;
+      const headKey = data.table + "\n" + data.keys.join(",") + "\n" + data.columns.join(",") + "\n" + data.visible.join(",");
+      if (headKey !== pairHeadKey) {
+        pairHeadKey = headKey;
+        renderPairHead(data);
+      }
+      renderPairBody(data);
+      const all = document.getElementById("pair-all");
+      all.checked = data.columns.length > 0 && data.visible.length === data.columns.length;
+      all.indeterminate = data.visible.length > 0 && data.visible.length < data.columns.length;
+      document.getElementById("pair-pager").innerHTML = data.total
+        ? '<button type="button" class="btn" id="pair-prev"' + (data.page <= 1 ? " disabled" : "") + ">Previous</button><span class=\"t3 small\">Page " +
+          n(data.page) + " of " + n(data.pages) + '</span><button type="button" class="btn" id="pair-next"' + (data.page >= data.pages ? " disabled" : "") + ">Next</button>"
+        : "";
+    }
+    async function loadPairs() {
+      const count = document.getElementById("pair-count");
+      if (!document.getElementById("pair-body")) count.textContent = "Loading pairs.";
+      try {
+        const res = await fetch("/prod-cr-pairs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            table: pairState.table,
+            page: pairState.page,
+            columns: pairState.columns,
+            filters: pairState.filters
+          })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        pairKnown = data.columns.slice();
+        if (pairState.columns === null) pairState.columns = pairKnown.slice();
+        renderPairs(data);
+      } catch (err) {
+        count.textContent = "The pairs could not be loaded.";
+      }
+    }
+    function usePairTable(code) {
+      pairState.table = code;
+      pairState.page = 1;
+      pairHeadKey = "";
+      const saved = pairStore()[code] || {};
+      pairState.columns = saved.columns || null;
+      pairState.filters = saved.filters || {};
+      loadPairs();
+    }
+    document.getElementById("pair-tabs").addEventListener("click", event => {
+      const button = event.target.closest("[data-table]");
+      if (button) usePairTable(button.dataset.table);
+    });
+    document.getElementById("pair-table").addEventListener("input", event => {
+      const box = event.target;
+      if (!box.classList.contains("hfilter")) return;
+      const name = box.dataset.filter;
+      if (box.value) pairState.filters[name] = box.value; else delete pairState.filters[name];
+      pairState.page = 1;
+      pairSave();
+      window.clearTimeout(pairTimer);
+      pairTimer = window.setTimeout(loadPairs, 250);
+    });
+    document.getElementById("pair-all").addEventListener("change", event => {
+      pairState.columns = event.target.checked ? pairKnown.slice() : [];
+      pairState.page = 1;
+      pairSave();
+      loadPairs();
+    });
+    document.getElementById("pair-table").addEventListener("change", event => {
+      const box = event.target;
+      if (box.type !== "checkbox" || !box.dataset.col) return;
+      const current = (pairState.columns || pairKnown).slice();
+      const at = current.indexOf(box.dataset.col);
+      if (box.checked && at < 0) current.push(box.dataset.col);
+      if (!box.checked && at >= 0) current.splice(at, 1);
+      pairState.columns = current;
+      pairState.page = 1;
+      pairSave();
+      loadPairs();
+    });
+    document.getElementById("pair-pager").addEventListener("click", event => {
+      if (event.target.id === "pair-prev") pairState.page -= 1;
+      if (event.target.id === "pair-next") pairState.page += 1;
+      if (event.target.id === "pair-prev" || event.target.id === "pair-next") loadPairs();
+    });
+    usePairTable("hdr");
+
+    async function loadData() {
+      try {
+        const res = await fetch("/prod-cr-data", { cache: "no-store" });
+        render(await res.json());
+      } catch (err) {
+        document.getElementById("status").textContent = "The comparison is not available right now.";
+      }
+    }
+    loadData();
+  </script>
+</body>
+</html>

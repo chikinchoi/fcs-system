@@ -1,0 +1,24 @@
+---
+description: Phase 1 application logs are local copies under D:\FCS\remote-log
+alwaysApply: true
+---
+
+# Phase 1 application logs
+
+Phase 1 application logs are not in the repo. They are a pull from the server into `D:\FCS\remote-log\`. Refresh the usual production pair with `py -3 self-scripts/pull-log/pull-log.py prod`. When production is on the other pair, use `py -3 self-scripts/pull-log/pull-log.py prod --primary 78`. `prod --all` pulls all four servers. The script only downloads. It does not change the server, and it stops without retrying when login fails. SIT and UAT use `sit` and `uat`, and land in `remote-log\sit` and `remote-log\uat`.
+
+Read production logs from the server folder that was primary at the time of the event:
+
+- Usual primary: `D:\FCS\remote-log\prod\76a` and `D:\FCS\remote-log\prod\76b`
+- Switched primary: `D:\FCS\remote-log\prod\78a` and `D:\FCS\remote-log\prod\78b`
+
+Current files inside each server folder:
+
+- Frontend: `fcs_app.log`
+- API: `fcs_api.log`
+- Kiosk: `kiosk.log`
+- PayHA: `fcshapay.log`
+
+Dated copies sit beside them, for example `fcs_app.log.2026-11-08`. Use the dated file only when its date matches the time being checked. Files directly under `D:\FCS\remote-log`, and subfolders such as `202609-unsure-drug-issue` and `20251010-production-76ab`, are older pulls. Do not treat them as the current log.
+
+Before using a file, check its last-modified time and the newest timestamp inside it. If either stops before the time of the event, say the local copy does not cover that time and ask for a fresh pull. Do not conclude that an event is absent from a copy that ends too early.

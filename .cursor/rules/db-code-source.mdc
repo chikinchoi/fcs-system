@@ -1,0 +1,18 @@
+---
+description: Read the latest pulled database code from out_sit, out_uat, or out_prod
+alwaysApply: true
+---
+
+# Database code source
+
+When the task needs the current stored procedure, function, package, package body, trigger, or table schema, read the latest pull. Copies elsewhere in the repo can be older than the database.
+
+- SIT: `self-scripts/pull-db-code/out_sit/`
+- UAT: `self-scripts/pull-db-code/out_uat/`
+- Production: `self-scripts/pull-db-code/out_prod/`
+
+Use SIT when the goal is SIT, a local change, or the environment is not named. Use UAT when the goal is UAT. Use production when the goal is production.
+
+Each environment folder contains timestamp folders named `YYYYMMDD_HHMMSS`. The greatest name is the latest pull. Inside it, program source is under `procedure/`, `function/`, `package/`, `package-body/`, and `trigger/`. Trigger files are the body from `ALL_TRIGGERS`. Table definitions are under `table/`. Row backups for `FCS_CONFIG_PARAMETER` and `FC_HOSPITAL_CODES` are under `data/`. `manifest.json` lists every object, its status, and its file.
+
+Do not treat a `.sql` or `.pro` file outside that latest folder as the current database source.

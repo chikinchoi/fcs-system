@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FCS system — SDC data flow</title>
+<link rel="stylesheet" href="styles.css?v=20261126h">
+</head>
+<body class="mod-sdc">
+<header class="top">
+  <div class="brand">
+    <p class="eyebrow">FCS system</p>
+    <h1 id="page-title">SDC data flow</h1>
+  </div>
+  <form class="inputs" id="inputs" autocomplete="off">
+    <label class="sdc-only">Hospital
+      <input id="hospital" type="text" maxlength="10" value="VH" spellcheck="false">
+    </label>
+    <label class="mid sdc-only">Case no.
+      <input id="case-no" type="text" maxlength="40" placeholder="SOPD2526037T" spellcheck="false">
+    </label>
+    <label class="grow sdc-only">MOE order
+      <input id="moe" type="text" placeholder="260012611, 260012525" spellcheck="false">
+    </label>
+    <label class="sdc-only">Interface since
+      <input id="since" type="date">
+    </label>
+    <div class="input-actions">
+      <button type="button" id="example" class="sdc-only" title="Sample values so the SQL is visible. They are not one patient.">Example</button>
+      <button type="button" id="clear-keys" class="sdc-only">Clear</button>
+      <button type="button" id="copy-all" class="icon primary sdc-only" title="Copy SDC SQL" aria-label="Copy SDC SQL"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"></rect><path d="M6 16H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"></path></svg></button>
+      <a class="prod-cr-link" href="/prod-cr">Prod vs CR</a>
+      <button type="button" id="theme">Light mode</button>
+    </div>
+  </form>
+</header>
+<p id="input-msg" class="input-msg" role="status"></p>
+<div class="app">
+  <nav class="side" aria-label="Modules">
+    <p class="side-label">Data flow</p>
+    <button type="button" class="mod on" data-module="sdc">SDC creation</button>
+    <p class="side-label">Rules</p>
+    <button type="button" class="mod" data-module="receipt-moe">Receipt type — MOE</button>
+    <button type="button" class="mod" data-module="receipt-sfi">Receipt type — SFI</button>
+    <button type="button" class="mod" data-module="charge">OPAS pay flag</button>
+    <p class="side-label">Production health</p>
+    <button type="button" class="mod" data-module="health">MOE and receipts</button>
+    <button type="button" class="mod" data-module="path">CMS path</button>
+    <button type="button" class="mod" data-module="day">Day counts</button>
+    <button type="button" class="mod" data-module="dhp">DHP canary</button>
+    <button type="button" class="mod" data-module="dhp-flow">DHP flows</button>
+    <p class="side-label">Login</p>
+    <button type="button" class="mod" data-module="mam">MAM</button>
+    <button type="button" class="mod" data-module="station">Station row</button>
+    <p class="side-label">After deploy</p>
+    <button type="button" class="mod" data-module="reg-generic">FCS Generic</button>
+    <button type="button" class="mod" data-module="reg-payha">PayHA</button>
+    <button type="button" class="mod" data-module="reg-kiosk">Kiosk</button>
+    <button type="button" class="mod" data-module="reg-frontend">Frontend</button>
+    <button type="button" class="mod" data-module="log">Request log</button>
+    <p class="side-label">Non production</p>
+    <button type="button" class="mod" data-module="dayend">Day-end</button>
+    <button type="button" class="mod" data-module="other">Other system</button>
+    <p class="side-label">Tools</p>
+    <button type="button" class="mod" data-module="scripts">Self script</button>
+    <p class="side-label">Compare</p>
+    <a class="mod" href="/prod-cr">Prod vs CR</a>
+  </nav>
+  <div class="work">
+    <section class="canvas" id="view-sdc" aria-label="SDC flow">
+      <div class="canvas-head">
+        <ol class="story">
+          <li>MOE replication inserts the charge header and the charge detail.</li>
+          <li>The header trigger writes the header log and updates the replication monitor.</li>
+          <li>The detail trigger writes the FCS case, drug charging, and attendance, or an exception row.</li>
+          <li>That trigger queues <span class="mono">fc_sdc_txn_index</span>. PayHA creation then writes <span class="mono">fc_payha_drug_charging</span>.</li>
+        </ol>
+        <p class="story-links">
+          <a href="https://app.notion.com/p/38a318e47d5080ec944bf6d8760787f0">SDC creation note</a>
+          <span class="muted">Arrow keys move along the flow when the cursor is outside the fields.</span>
+        </p>
+      </div>
+      <div class="flow-scroll" id="flow-scroll">
+        <div id="flow" class="flow"></div>
+      </div>
+      <div class="sideflow">
+        <h2>OPAS interface</h2>
+        <p class="muted">These two lookups are not filtered by the MOE order. They sit beside the SDC path because the attendance interface is a separate feed.</p>
+        <div id="side-flow" class="side-flow"></div>
+      </div>
+    </section>
+    <section class="canvas hidden" id="view-health" aria-label="Production health"></section>
+    <section class="canvas hidden" id="view-path" aria-label="CMS path"></section>
+    <section class="canvas hidden" id="view-day" aria-label="Day counts"></section>
+    <section class="canvas hidden" id="view-dhp" aria-label="DHP canary"></section>
+    <section class="canvas hidden" id="view-dhp-flow" aria-label="DHP flows"></section>
+    <section class="canvas hidden" id="view-mam" aria-label="MAM login"></section>
+    <section class="canvas hidden" id="view-station" aria-label="Station row"></section>
+    <section class="canvas hidden" id="view-receipt-moe" aria-label="Receipt type — MOE"></section>
+    <section class="canvas hidden" id="view-receipt-sfi" aria-label="Receipt type — SFI"></section>
+    <section class="canvas hidden" id="view-charge" aria-label="OPAS pay flag"></section>
+    <section class="canvas hidden" id="view-regression" aria-label="Regression"></section>
+    <section class="canvas hidden" id="view-log" aria-label="Request log"></section>
+    <section class="canvas hidden" id="view-dayend" aria-label="Day-end non production"></section>
+    <section class="canvas hidden" id="view-scripts" aria-label="Self script"></section>
+    <section class="canvas hidden" id="view-other" aria-label="Other system"></section>
+    <aside class="detail" id="detail" aria-live="polite"></aside>
+  </div>
+</div>
+<script src="health.js"></script>
+<script src="med-path.js"></script>
+<script src="day-count.js"></script>
+<script src="dhp.js"></script>
+<script src="dhp-flow.js"></script>
+<script src="mam.js"></script>
+<script src="station.js?v=20261126i"></script>
+<script src="app.js"></script>
+<script src="charge-rates-qeh.js"></script>
+<script src="rules.js"></script>
+<script src="regression.js"></script>
+<script src="dayend-nonprod.js"></script>
+<script src="self-script.js"></script>
+<script src="other-system.js"></script>
+</body>
+</html>

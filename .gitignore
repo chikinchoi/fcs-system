@@ -1,0 +1,13 @@
+node_modules/
+self-scripts/**/*.local.json
+self-scripts/pull-db-code/db.*.json
+self-scripts/pull-server/pull-log/sit.json
+self-scripts/pull-server/pull-log/uat.json
+self-scripts/pull-server/pull-log/prod.json
+self-scripts/pull-server/pull-log/pull.log
+self-scripts/pull-server/pull-log/pull-sit.log
+self-scripts/pull-server/pull-log/pull-uat.log
+self-scripts/pull-server/pull-log/pull-prod.log
+self-scripts/pull-db-code/out_*/
+self-scripts/pull-db-code/pull-db-code.log
+war-png/

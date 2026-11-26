@@ -1,0 +1,7 @@
+{
+  "name": "fcs-system",
+  "private": true,
+  "dependencies": {
+    "oracledb": "^6.10.0"
+  }
+}

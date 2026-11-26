@@ -1,0 +1,14 @@
+---
+description: Use the HA proxy before npm, curl, or other outbound network calls
+alwaysApply: true
+---
+
+# Network proxy
+
+Outbound calls from this machine need the proxy first, the same way a browser page does. Direct DNS to public hosts such as registry.npmjs.org fails.
+
+- Read the proxy URL from the user npmrc line that starts with `proxy=`. It is an `http://` URL and it contains credentials.
+- For a command, set `HTTP_PROXY` and `HTTPS_PROXY` to that exact URL. Do not print the URL, the username, or the password. Do not put the URL on the command line, because the terminal log would keep it.
+- npm 11 ignores the key `https_proxy`. The key `https-proxy` must use the `http://` scheme to the same proxy host and port. An `https://` scheme to that proxy is wrong.
+- Do not change the password stored in the npmrc.
+- The health page needs `npm install` in this folder so the `oracledb` driver is present. After a successful install, restart `node regression-proxy.js`.
