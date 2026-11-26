@@ -10,15 +10,16 @@
     "reg-frontend": "Frontend",
     log: "Request log",
     health: "Production health",
-    path: "CMS path",
+    path: "CMS path healthness",
     day: "Day counts",
-    dhp: "DHP canary",
+    dhp: "DHP before and after",
     "dhp-flow": "DHP flows",
     mam: "MAM login",
     station: "Station row",
     dayend: "Day-end non production",
     scripts: "Self script",
-    other: "Other system"
+    other: "Other system",
+    prodcr: "Prod vs CR"
   };
 
   document.body.classList.add("mod-sdc");
@@ -72,11 +73,28 @@
     document.getElementById("view-dayend").classList.toggle("hidden", id !== "dayend");
     document.getElementById("view-scripts").classList.toggle("hidden", id !== "scripts");
     document.getElementById("view-other").classList.toggle("hidden", id !== "other");
+    document.getElementById("view-prodcr").classList.toggle("hidden", id !== "prodcr");
+    if (id === "prodcr") openProdCr();
     document.getElementById("page-title").textContent = TITLES[id] || id;
     document.title = "FCS system — " + (TITLES[id] || id);
     if (reg && window.fcsRegression) window.fcsRegression.show(id.slice(4));
     if (log && window.fcsRegression) window.fcsRegression.showLog();
   }
+
+  function openProdCr() {
+    var frame = document.getElementById("prodcr-frame");
+    if (!frame.getAttribute("src")) frame.src = "/prod-cr?embed=1";
+    frame.onload = syncProdCrTheme;
+    syncProdCrTheme();
+  }
+
+  function syncProdCrTheme() {
+    var frame = document.getElementById("prodcr-frame");
+    if (!frame || !frame.contentDocument) return;
+    frame.contentDocument.documentElement.classList.toggle("light", document.documentElement.classList.contains("light"));
+  }
+
+  window.fcsSyncProdCrTheme = syncProdCrTheme;
 
   function observedMeansTable(which) {
     var names = {

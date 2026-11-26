@@ -75,7 +75,7 @@
   function render() {
     root.innerHTML =
       '<div class="health-page">' +
-      '<div class="dash-top"><h1>CMS path</h1><p class="src">Password is used for this check and is not stored. One database session is opened for this page and closed when the load finishes. Disconnect closes it sooner. Each read stops after 8 seconds. This session is not the MOE and receipts session. The read is the newest tlog row in each table. The date and hospital boxes match that page and are not applied, because the index can return one newest row for the whole table.</p></div>' +
+      '<div class="dash-top"><h1>CMS path healthness</h1><p class="src">Password is used for this check and is not stored. One database session is opened for this page and closed when the load finishes. Disconnect closes it sooner. Each read stops after 8 seconds. This session is not the MOE and receipts session. The read is the newest tlog row in each table. The date and hospital boxes match that page and are not applied, because the index can return one newest row for the whole table.</p></div>' +
       '<div class="reg-fields">' +
       '<label class="wide">Connection string<input id="path-connect" class="url" spellcheck="false" placeholder="host:port/service" autocomplete="off" value="' + escapeAttr(connect) + '"></label>' +
       '<label>Username<input id="path-user" spellcheck="false" autocomplete="off" value="' + escapeAttr(user) + '"></label>' +

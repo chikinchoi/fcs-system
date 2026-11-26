@@ -334,6 +334,7 @@
     document.documentElement.classList.toggle("light");
     localStorage.setItem("fcs-system:theme", document.documentElement.classList.contains("light") ? "light" : "dark");
     syncThemeLabel();
+    if (window.fcsSyncProdCrTheme) window.fcsSyncProdCrTheme();
   }
 
   function syncThemeLabel() {

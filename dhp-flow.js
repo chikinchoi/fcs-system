@@ -192,7 +192,7 @@
   root.innerHTML =
     '<div class="health-page">' +
     '<div class="dash-top"><h1>DHP screen flows</h1>' +
-    '<p class="src">Each block is one way a cashier reaches an OPAS call. Read it top to bottom. A highlighted row is a value that is not the same on the old SOAP call and the new REST call. The canary name is the row on the DHP canary page.</p></div>' +
+    '<p class="src">Each block is one way a cashier reaches an OPAS call. Read it top to bottom. A highlighted row is a value that is not the same on the old SOAP call and the new REST call. The canary name is the row on the DHP before and after page.</p></div>' +
     sharedChart() +
     '<nav class="flow-jump">' + screens.map(function (screen) {
       return '<a href="#flow-' + screen.id + '">' + esc(screen.title) + "</a>";

@@ -84,7 +84,7 @@
   function render() {
     root.innerHTML =
       '<div class="health-page">' +
-      '<div class="dash-top"><h1>DHP canary</h1><p class="src">HHH is the first hospital on the new endpoint. Connect and load counts the new-endpoint calls in the range. Compare calls the old SOAP endpoint for that one request and checks the fields the payment code stores. Handled means the mapping already stores the same result. Password is used for this check and is not stored. The database read does not write.</p></div>' +
+      '<div class="dash-top"><h1>DHP before and after</h1><p class="src">HHH is the first hospital on the new endpoint. Connect and load counts the new-endpoint calls in the range. Compare calls the old SOAP endpoint for that one request and checks the fields the payment code stores. Handled means the mapping already stores the same result. Password is used for this check and is not stored. The database read does not write.</p></div>' +
       '<div class="reg-fields">' +
       '<label class="wide">Connection string<input id="dhp-connect" class="url" spellcheck="false" placeholder="host:port/service" autocomplete="off" value="' + escapeAttr(connect) + '"></label>' +
       '<label>Username<input id="dhp-user" spellcheck="false" autocomplete="off" value="' + escapeAttr(user) + '"></label>' +

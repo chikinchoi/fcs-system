@@ -295,6 +295,7 @@ button:focus-visible, .node:focus-visible, a:focus-visible {
   letter-spacing: .06em;
   text-transform: uppercase;
 }
+.mod + .side-label { margin-top: 14px; }
 .mod {
   display: block;
   width: 100%;
@@ -976,18 +977,8 @@ button.danger, button.primary.danger {
   .reg-split { grid-template-columns: 1fr; }
   .reg-score { position: static; }
 }
-a.prod-cr-link {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid var(--line);
-  background: var(--btn);
-  border-radius: 8px;
-  padding: 7px 10px;
-  color: inherit;
-  text-decoration: none;
-  white-space: nowrap;
-}
-a.prod-cr-link:hover { border-color: var(--accent); }
+#view-prodcr { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+#view-prodcr iframe { flex: 1; width: 100%; height: 100%; border: 0; background: var(--bg); }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
