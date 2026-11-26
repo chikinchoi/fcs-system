@@ -1,0 +1,24 @@
+---
+description: Comment Java and stored-procedure edits with Gary, the date, and the feature name first
+alwaysApply: true
+---
+
+# Change comments
+
+When you change a `.java` or `.pro` file, add a comment on the changed line, or once directly above a contiguous block that is one change. Do not comment unchanged lines.
+
+Use the date of the edit as `YYYYMMDD`.
+
+Java:
+
+```java
+// Gary 20261106 - ASC changes: pay flag S is allowed through with a waiver the same as F.
+```
+
+Stored procedure:
+
+```sql
+-- Gary 20261106 - ASC changes: pay flag S is allowed through with a waiver the same as F.
+```
+
+The text after the date starts with `ASC changes:`, then what changed and why. `ASC changes` is the main feature name and belongs on every Java and stored-procedure comment.
